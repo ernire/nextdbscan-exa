@@ -24,9 +24,6 @@ SOFTWARE.
 __device__
 #endif
 static const int NO_CLUSTER = INT32_MAX;
-#ifdef CUDA_ON
-__device__
-#endif
 
 #ifdef CUDA_ON
 #include <thrust/host_vector.h>
@@ -61,8 +58,10 @@ public:
     d_vec<int> v_coord_cluster_index;
     d_vec<int> v_cluster_label;
 #ifdef CUDA_ON
-    explicit data_process(h_vec<float> &v_coord, int const m, float const e, int const n_dim, int const n_total_coord)
-        : m(m), n_dim(n_dim), n_coord(v_coord.size()/n_dim), e(e), e2(e*e), n_total_coord(n_total_coord), v_coord(v_coord) {}
+    explicit data_process(h_vec<float> &v_coord, int const m, float const e, int const n_dim, int const n_total_coord, bool const is_approximate)
+        : m(m), n_dim(n_dim), n_coord(v_coord.size()/n_dim), e(e), e2(e*e), n_total_coord(n_total_coord), is_approximate(is_approximate), v_coord(v_coord) {
+        allocated_bytes = n_coord * n_dim * sizeof(float);
+    }
 #else
     explicit data_process(
             h_vec<float> &v_coord,

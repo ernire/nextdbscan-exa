@@ -174,7 +174,6 @@ void data_process::process_cores(d_vec<int> const &v_core_id, d_vec<float> const
     if (mpi.n_nodes > 1)
         mpi.allReduce(v_core_cluster_index, magmaMPI::min);
 #endif
-
     int iter_cnt = 0;
     d_vec<int> v_running(1, 1);
     d_vec<int> v_running_cnt(1, 0);
@@ -183,11 +182,7 @@ void data_process::process_cores(d_vec<int> const &v_core_id, d_vec<float> const
     auto const _is_approximate = is_approximate;
     while (v_running[0] == 1) {
         it_running[0] = 0;
-#ifdef DEBUG_ON
-        if (mpi.rank == 0)
-            std::cout << "iter: " << (++iter_cnt) << std::endl;
-#endif
-
+        ++iter_cnt;
         exa::for_each(0, n_coord, [=]
 #ifdef CUDA_ON
         __device__
@@ -264,6 +259,10 @@ void data_process::process_cores(d_vec<int> const &v_core_id, d_vec<float> const
             }
         });
     }
+#ifdef DEBUG_ON
+    if (mpi.rank == 0)
+        std::cout << "FlatLabel required " << iter_cnt << " iterations" << std::endl;
+#endif
 }
 
 void data_process::select_cores_and_process(magmaMPI mpi) noexcept {
@@ -305,7 +304,7 @@ void data_process::select_cores_and_process(magmaMPI mpi) noexcept {
         exa::fill(v_data_chunk, 0, v_data_chunk.size(), std::numeric_limits<float>::max());
         int size = node_transmit_size;
         if (transmit_cnt + node_transmit_size > v_point_core_id.size()) {
-            size = static_cast<int>(v_point_core_id.size()) - transmit_cnt;
+            size = v_point_core_id.size() - transmit_cnt;
         }
         if (size > 0) {
             exa::copy(v_point_core_id, transmit_cnt, transmit_cnt + size,
@@ -400,9 +399,11 @@ void data_process::process_points(d_vec<int> const &v_point_id, d_vec<float> con
     auto const _n_dim = n_dim;
     auto const _e2 = e2;
     auto const it_coord_nn = v_coord_nn.begin();
-    auto const _n_points = v_point_id.size();
+    auto const _n_coord = n_coord;
+    auto const _n_point = v_point_id.size();
 
-    // coords i, points j
+    /*
+    // 55 sec, 27 sec, 15 sec
     exa::for_each(0, n_coord, [=]
 #ifdef CUDA_ON
         __device__
@@ -426,6 +427,33 @@ void data_process::process_points(d_vec<int> const &v_point_id, d_vec<float> con
         }
         it_coord_nn[i] = hits;
     });
+     */
+
+
+    exa::for_each(0, _n_point, [=]
+#ifdef CUDA_ON
+            __device__
+#endif
+    (auto const &j) -> void {
+        auto const p2 = &it_point[j * _n_dim];
+        // check for empty padding data
+        if (p2[0] != _max_float) {
+            for (std::size_t i = 0; i < _n_coord; ++i) {
+                auto const p1 = &it_coord[i * _n_dim];
+                float length = 0;
+                for (int d = 0; d < _n_dim; ++d) {
+                    length += (p1[d] - p2[d]) * (p1[d] - p2[d]);
+                }
+                if (length <= _e2) {
+//                    it_coord_nn[i] = it_coord_nn[i] + 1;
+                    exa::atomic_add(&it_coord_nn[i], 1);
+                }
+            }
+        }
+
+    });
+
+
 
 }
 

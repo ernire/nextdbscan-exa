@@ -101,6 +101,7 @@ namespace exa {
 //        thrust::for_each(it_cnt_begin, it_cnt_begin + (end - begin), functor);
 //        thrust::make_counting_iterator(0),
         thrust::for_each(thrust::make_counting_iterator(begin), thrust::make_counting_iterator(begin + (end - begin)), functor);
+//        thrust::for_each(it_cnt_begin, it_cnt_end, functor);
     }
 
     template <typename F>

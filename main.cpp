@@ -89,9 +89,10 @@ int main(int argc, char** argv) {
 #ifdef OMP_ON
     omp_set_num_threads(t);
 #endif
-    if (mpi.rank == 0)
+    if (mpi.rank == 0) {
         std::cout << "Starting NextDBSCAN with file: " << input_file << " m: " << m << " e: " << e << " t: " << t
-            << " a: " << a << std::endl;
+                  << " a: " << a << std::endl;
+    }
     auto results = nextdbscan::start(m, e, t, input_file, mpi, a == 1);
 
     if (mpi.rank == 0) {
