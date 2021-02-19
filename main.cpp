@@ -90,12 +90,17 @@ int main(int argc, char** argv) {
     omp_set_num_threads(t);
 #endif
     if (mpi.rank == 0)
-        std::cout << "Starting NextDBSCAN with file: " << input_file << " m: " << m << " e: " << e << " t: " << t << std::endl;
+        std::cout << "Starting NextDBSCAN with file: " << input_file << " m: " << m << " e: " << e << " t: " << t
+            << " a: " << a << std::endl;
     auto results = nextdbscan::start(m, e, t, input_file, mpi, a == 1);
 
     if (mpi.rank == 0) {
         std::cout << std::endl;
-        std::cout << "Estimated Clusters: " << results.clusters << std::endl;
+        if (a == 0) {
+            std::cout << "Estimated Clusters: " << results.clusters << std::endl;
+        } else if (a == 1) {
+            std::cout << "Upper-bound Approximate Clusters: " << results.clusters << std::endl;
+        }
         std::cout << "Core Points: " << results.core_count << std::endl;
         std::cout << "Noise Points: " << results.noise << std::endl;
 
