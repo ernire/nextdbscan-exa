@@ -338,7 +338,7 @@ void data_process::select_and_process(magmaMPI mpi) noexcept {
     std::size_t n_sample_size = 100 * million;
     if (n_total_coord < n_sample_size) {
         // A bit of padding is added at the end to counter rounding issues
-        n_sample_size = static_cast<int>(n_total_coord) + (mpi.n_nodes * 2);
+        n_sample_size = static_cast<int>(n_total_coord) + 2;
     }
 #ifdef DEBUG_ON
     if (mpi.rank == 0) {

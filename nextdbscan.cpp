@@ -45,7 +45,7 @@ nextdbscan::result nextdbscan::start(int const m, float const e, int const n_thr
     auto start_timestamp_no_io = std::chrono::high_resolution_clock::now();
     data_process dp(v_coord, m, e, n_dim, n_total_coord, is_approximate);
 
-    magma_util::measure_duration("Classify Points: ", /*mpi.rank == 0*/true, [&]() -> void {
+    magma_util::measure_duration("Classify Points: ", mpi.rank == 0, [&]() -> void {
         dp.select_and_process(mpi);
     });
 
